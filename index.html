@@ -2,81 +2,106 @@
 <html lang="tr">
 
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>♻️ Akıllı Geri Dönüşüm Sistemi</title>
+<title>Minik Toz Makineleri ♻️</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
 <style>
 
+/* GENEL */
 body{
     margin:0;
-    font-family:Arial,sans-serif;
-    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-    color:white;
+    font-family:'Arial Rounded MT Bold', Arial;
+    background: linear-gradient(135deg, #a8e6cf, #dcedc1, #b3e5fc);
     text-align:center;
 }
 
-.container{
+/* HEADER */
+.header{
     padding:20px;
+    background:white;
+    border-bottom-left-radius:30px;
+    border-bottom-right-radius:30px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.1);
 }
 
-h1{
-    margin-top:20px;
-    font-size:42px;
+.title{
+    font-size:40px;
+    font-weight:bold;
+    color:#2e7d32;
 }
 
 .subtitle{
-    font-size:20px;
-    margin-bottom:20px;
+    font-size:18px;
+    color:#555;
 }
 
+/* ÜST BLOK */
+.top-row{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    padding:20px;
+    flex-wrap:wrap;
+}
+
+/* CARD */
+.card{
+    background:white;
+    width:380px;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* RESULT */
+.result-card{
+    margin:20px auto;
+    width:820px;
+    max-width:90%;
+    border:3px dashed #4caf50;
+}
+
+#result{
+    font-size:24px;
+    font-weight:bold;
+    color:#2e7d32;
+    margin-top:10px;
+    line-height:1.6;
+}
+
+/* BUTTON */
 button{
-    background:#00c853;
+    background:#4caf50;
     color:white;
     border:none;
-    padding:15px 30px;
-    border-radius:10px;
-    font-size:18px;
+    padding:12px 20px;
+    border-radius:12px;
+    font-size:16px;
     cursor:pointer;
-    margin:10px;
+    margin:8px;
 }
 
 button:hover{
     transform:scale(1.05);
 }
 
-#webcam-container{
-    margin-top:20px;
-}
-
+/* CAMERA */
 canvas{
-    border-radius:20px;
-    border:5px solid white;
-    box-shadow:0 0 20px rgba(0,0,0,0.4);
+    border-radius:15px;
+    border:4px solid #4caf50;
 }
 
-.result-box{
-    margin:30px auto;
-    width:400px;
-    background:white;
-    color:black;
-    border-radius:20px;
-    padding:20px;
-}
-
-#result{
-    font-size:40px;
-    font-weight:bold;
-}
-
-.status{
-    margin-top:10px;
-    font-size:18px;
+/* MOBILE */
+@media (max-width:900px){
+    .top-row{
+        flex-direction:column;
+        align-items:center;
+    }
 }
 
 </style>
@@ -85,74 +110,57 @@ canvas{
 
 <body>
 
-<div class="container">
-
-<h1>♻️ Akıllı Geri Dönüşüm Sistemi</h1>
-
-<div class="subtitle">
-Yapay Zekâ Destekli Atık Sınıflandırma
+<div class="header">
+    <div class="title">🌿 Minik Toz Makineleri</div>
+    <div class="subtitle">♻️ Çevre Kirliliğine Karşı Küçük Kahramanlar</div>
 </div>
 
-<button onclick="connectArduino()">
-Arduino Bağlan
-</button>
+<!-- ÜST BLOK -->
+<div class="top-row">
 
-<button onclick="init()">
-Kamerayı Başlat
-</button>
+    <div class="card">
+        <h2>🤖 Sistem Kontrol Paneli</h2>
 
-<div class="status" id="arduinoStatus">
-Arduino Bağlı Değil
-</div>
+        <button onclick="connectArduino()">🔌 Arduino Bağlan</button>
+        <button onclick="init()">📷 Kamerayı Başlat</button>
 
-<div id="webcam-container"></div>
+        <div id="arduinoStatus">Arduino Bağlı Değil ❌</div>
+    </div>
 
-<div class="result-box">
-
-<h2>Algılanan Atık</h2>
-
-<div id="result">
-Bekleniyor...
-</div>
+    <div class="card">
+        <h2>👀 Kamera</h2>
+        <div id="webcam-container"></div>
+    </div>
 
 </div>
 
+<!-- SONUÇ -->
+<div class="card result-card">
+    <h2>♻️ Algılanan Atık Analizi</h2>
+    <div id="result">Bekleniyor...</div>
 </div>
 
 <script>
 
-const URL =
-"https://teachablemachine.withgoogle.com/models/_uLZvC8jP/";
+const URL = "https://teachablemachine.withgoogle.com/models/_uLZvC8jP/";
 
-let model;
-let webcam;
-let maxPredictions;
-
-let port;
-let writer;
-
+let model, webcam;
+let port, writer;
 let sonSinif = "";
 
 async function connectArduino(){
 
     try{
-
         port = await navigator.serial.requestPort();
-
-        await port.open({
-            baudRate:9600
-        });
+        await port.open({ baudRate:9600 });
 
         writer = port.writable.getWriter();
 
         document.getElementById("arduinoStatus")
-        .innerHTML="✅ Arduino Bağlandı";
+        .innerHTML = "✅ Arduino Bağlandı";
 
-    }
-
-    catch(error){
-
-        alert("Arduino bağlantısı başarısız.");
+    }catch(err){
+        alert("Arduino bağlantı hatası");
     }
 }
 
@@ -161,98 +169,74 @@ async function init(){
     const modelURL = URL + "model.json";
     const metadataURL = URL + "metadata.json";
 
-    model = await tmImage.load(
-        modelURL,
-        metadataURL
-    );
+    model = await tmImage.load(modelURL, metadataURL);
 
-    maxPredictions =
-    model.getTotalClasses();
-
-    webcam =
-    new tmImage.Webcam(
-        350,
-        350,
-        true
-    );
-
+    webcam = new tmImage.Webcam(350, 350, true);
     await webcam.setup();
     await webcam.play();
 
-    window.requestAnimationFrame(loop);
+    document.getElementById("webcam-container")
+    .appendChild(webcam.canvas);
 
-    document.getElementById(
-        "webcam-container"
-    ).appendChild(
-        webcam.canvas
-    );
+    loop();
 }
 
 async function loop(){
-
     webcam.update();
-
     await predict();
-
-    window.requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
 }
 
 async function predict(){
 
-    const prediction =
-    await model.predict(
-        webcam.canvas
-    );
+    const prediction = await model.predict(webcam.canvas);
 
-    let highest =
-    prediction[0];
+    let highest = prediction[0];
 
-    for(
-        let i=1;
-        i<prediction.length;
-        i++
-    ){
-
-        if(
-            prediction[i].probability >
-            highest.probability
-        ){
-
-            highest =
-            prediction[i];
+    for(let i=1;i<prediction.length;i++){
+        if(prediction[i].probability > highest.probability){
+            highest = prediction[i];
         }
     }
 
-    document.getElementById(
-        "result"
-    ).innerHTML =
-    highest.className;
+    let cls = highest.className.toLowerCase();
 
-    if(
-        highest.probability > 0.90 &&
-        highest.className !== sonSinif
-    ){
-
-       let cls = highest.className.toLowerCase();
-
-if(writer){
+    let msg = "";
 
     if(cls === "cam"){
-        await writer.write(new TextEncoder().encode("C"));
+        msg = "🟢 Bu bir CAM atığıdır.\n♻️ Geri dönüşüme uygundur ve cam kutusuna atabilirsiniz.";
     }
-
     else if(cls === "kağıt" || cls === "kagit"){
-        await writer.write(new TextEncoder().encode("K"));
+        msg = "🟡 Bu bir KAĞIT atığıdır.\n♻️ Geri dönüşüme uygundur ve kağıt kutusuna atabilirsiniz.";
     }
-
     else if(cls === "plastik"){
-        await writer.write(new TextEncoder().encode("P"));
+        msg = "🔵 Bu bir PLASTİK atığıdır.\n♻️ Geri dönüşüme uygundur ve plastik kutusuna atabilirsiniz.";
+    }
+    else if(cls === "metal"){
+        msg = "⚙️ Bu bir METAL atığıdır.\n♻️ Geri dönüşüme uygundur ve metal kutusuna atabilirsiniz.";
     }
 
-    else if(cls === "metal"){
-        await writer.write(new TextEncoder().encode("M"));
-    }
-}
+    document.getElementById("result").innerText = msg;
+
+    if(highest.probability > 0.90 && highest.className !== sonSinif){
+
+        sonSinif = highest.className;
+
+        if(writer){
+
+            if(cls === "cam"){
+                writer.write(new TextEncoder().encode("C"));
+            }
+            else if(cls === "kağıt" || cls === "kagit"){
+                writer.write(new TextEncoder().encode("K"));
+            }
+            else if(cls === "plastik"){
+                writer.write(new TextEncoder().encode("P"));
+            }
+            else if(cls === "metal"){
+                writer.write(new TextEncoder().encode("M"));
+            }
+        }
     }
 }
 
