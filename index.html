@@ -233,51 +233,26 @@ async function predict(){
         highest.className !== sonSinif
     ){
 
-        sonSinif =
-        highest.className;
+       let cls = highest.className.toLowerCase();
 
-        if(writer){
+if(writer){
 
-            if(
-                highest.className === "♻️ Algılanan Atık: CAM ✅ Bu atığı geri dönüşüm kutusuna atınız."
-            ){
+    if(cls === "cam"){
+        await writer.write(new TextEncoder().encode("C"));
+    }
 
-                await writer.write(
-                    new TextEncoder()
-                    .encode("C")
-                );
-            }
+    else if(cls === "kağıt" || cls === "kagit"){
+        await writer.write(new TextEncoder().encode("K"));
+    }
 
-            else if(
-                highest.className === "♻️ Algılanan Atık: KAĞIT ✅ Bu atığı geri dönüşüm kutusuna atınız."
-            ){
+    else if(cls === "plastik"){
+        await writer.write(new TextEncoder().encode("P"));
+    }
 
-                await writer.write(
-                    new TextEncoder()
-                    .encode("K")
-                );
-            }
-
-            else if(
-                highest.className === "♻️ Algılanan Atık: PLASTİK ✅ Bu atığı geri dönüşüm kutusuna atınız."
-            ){
-
-                await writer.write(
-                    new TextEncoder()
-                    .encode("P")
-                );
-            }
-
-            else if(
-                highest.className === "♻️ Algılanan Atık: METAL ✅ Bu atığı geri dönüşüm kutusuna atınız."
-            ){
-
-                await writer.write(
-                    new TextEncoder()
-                    .encode("M")
-                );
-            }
-        }
+    else if(cls === "metal"){
+        await writer.write(new TextEncoder().encode("M"));
+    }
+}
     }
 }
 
