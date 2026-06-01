@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>♻️ Akıllı Geri Dönüşüm Sistemi</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color:white;
+    text-align:center;
+}
+
+.container{
+    padding:20px;
+}
+
+h1{
+    margin-top:20px;
+    font-size:42px;
+}
+
+.subtitle{
+    font-size:20px;
+    margin-bottom:20px;
+}
+
+button{
+    background:#00c853;
+    color:white;
+    border:none;
+    padding:15px 30px;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+    margin:10px;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+#webcam-container{
+    margin-top:20px;
+}
+
+canvas{
+    border-radius:20px;
+    border:5px solid white;
+    box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+.result-box{
+    margin:30px auto;
+    width:400px;
+    background:white;
+    color:black;
+    border-radius:20px;
+    padding:20px;
+}
+
+#result{
+    font-size:40px;
+    font-weight:bold;
+}
+
+.status{
+    margin-top:10px;
+    font-size:18px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>♻️ Akıllı Geri Dönüşüm Sistemi</h1>
+
+<div class="subtitle">
+Yapay Zekâ Destekli Atık Sınıflandırma
+</div>
+
+<button onclick="connectArduino()">
+Arduino Bağlan
+</button>
+
+<button onclick="init()">
+Kamerayı Başlat
+</button>
+
+<div class="status" id="arduinoStatus">
+Arduino Bağlı Değil
+</div>
+
+<div id="webcam-container"></div>
+
+<div class="result-box">
+
+<h2>Algılanan Atık</h2>
+
+<div id="result">
+Bekleniyor...
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const URL =
+"https://teachablemachine.withgoogle.com/models/_uLZvC8jP/";
+
+let model;
+let webcam;
+let maxPredictions;
+
+let port;
+let writer;
+
+let sonSinif = "";
+
+async function connectArduino(){
+
+    try{
+
+        port = await navigator.serial.requestPort();
+
+        await port.open({
+            baudRate:9600
+        });
+
+        writer = port.writable.getWriter();
+
+        document.getElementById("arduinoStatus")
+        .innerHTML="✅ Arduino Bağlandı";
+
+    }
+
+    catch(error){
+
+        alert("Arduino bağlantısı başarısız.");
+    }
+}
+
+async function init(){
+
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
+
+    model = await tmImage.load(
+        modelURL,
+        metadataURL
+    );
+
+    maxPredictions =
+    model.getTotalClasses();
+
+    webcam =
+    new tmImage.Webcam(
+        350,
+        350,
+        true
+    );
+
+    await webcam.setup();
+    await webcam.play();
+
+    window.requestAnimationFrame(loop);
+
+    document.getElementById(
+        "webcam-container"
+    ).appendChild(
+        webcam.canvas
+    );
+}
+
+async function loop(){
+
+    webcam.update();
+
+    await predict();
+
+    window.requestAnimationFrame(loop);
+}
+
+async function predict(){
+
+    const prediction =
+    await model.predict(
+        webcam.canvas
+    );
+
+    let highest =
+    prediction[0];
+
+    for(
+        let i=1;
+        i<prediction.length;
+        i++
+    ){
+
+        if(
+            prediction[i].probability >
+            highest.probability
+        ){
+
+            highest =
+            prediction[i];
+        }
+    }
+
+    document.getElementById(
+        "result"
+    ).innerHTML =
+    highest.className;
+
+    if(
+        highest.probability > 0.90 &&
+        highest.className !== sonSinif
+    ){
+
+        sonSinif =
+        highest.className;
+
+        if(writer){
+
+            if(
+                highest.className === "♻️ Algılanan Atık: CAM ✅ Bu atığı geri dönüşüm kutusuna atınız."
+            ){
+
+                await writer.write(
+                    new TextEncoder()
+                    .encode("C")
+                );
+            }
+
+            else if(
+                highest.className === "♻️ Algılanan Atık: KAĞIT ✅ Bu atığı geri dönüşüm kutusuna atınız."
+            ){
+
+                await writer.write(
+                    new TextEncoder()
+                    .encode("K")
+                );
+            }
+
+            else if(
+                highest.className === "♻️ Algılanan Atık: PLASTİK ✅ Bu atığı geri dönüşüm kutusuna atınız."
+            ){
+
+                await writer.write(
+                    new TextEncoder()
+                    .encode("P")
+                );
+            }
+
+            else if(
+                highest.className === "♻️ Algılanan Atık: METAL ✅ Bu atığı geri dönüşüm kutusuna atınız."
+            ){
+
+                await writer.write(
+                    new TextEncoder()
+                    .encode("M")
+                );
+            }
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>
