@@ -9,8 +9,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
 <style>
+:root{
+--main-color:#4caf50;
+}
+  
 body{
-transition: background 0.6s ease;
+transition: background 1.2s cubic-bezier(0.25, 1, 0.5, 1);
 margin:0;
 font-family:Arial,sans-serif;
 background:linear-gradient(135deg,#a8e6cf,#dcedc1,#b3e5fc);
@@ -22,6 +26,7 @@ background:white;
 padding:12px;
 box-shadow:0 3px 10px rgba(0,0,0,.1);
 }
+
 
 .title{font-size:32px;font-weight:bold;color:#2e7d32;}
 .subtitle{font-size:16px;color:#555;}
@@ -39,19 +44,21 @@ background:white;
 padding:15px;
 border-radius:20px;
 box-shadow:0 5px 15px rgba(0,0,0,.1);
+border:3px solid var(--main-color);
 }
 
 .control{width:260px;}
 .camera{width:420px;}
 
 button{
-background:#4caf50;
+background:var(--main-color);
 color:white;
 border:none;
 padding:10px 15px;
 border-radius:10px;
 cursor:pointer;
 margin:5px;
+transition: all 0.5s ease;
 }
 
 canvas{
@@ -237,7 +244,10 @@ clearBins();
 if(cls==="cam"){
 document.getElementById("camBin").classList.add("active-bin");
 document.getElementById("result").innerText="🟢 CAM - Bu atığı CAM kutusuna atınız";
-changeBackground("linear-gradient(135deg,#a8e6cf,#dcedc1,#b3e5fc)");
+setTheme(
+"linear-gradient(135deg,#c8e6c9,#a5d6a7,#81c784)",
+"#2e7d32"
+);
 sendArduino("C");
 }
 else if(cls==="kağıt" || cls==="kagit"){
@@ -249,19 +259,28 @@ sendArduino("K");
 else if(cls==="plastik"){
 document.getElementById("plastikBin").classList.add("active-bin");
 document.getElementById("result").innerText="🔴 PLASTİK - Bu atığı PLASTİK kutusuna atınız";
-changeBackground("linear-gradient(135deg,#ffcdd2,#ef9a9a,#e57373)");
+setTheme(
+"linear-gradient(135deg,#fff9c4,#fff59d,#ffe082)",
+"#f9a825"
+);
 sendArduino("P");
 }
 else if(cls==="metal"){
 document.getElementById("metalBin").classList.add("active-bin");
 document.getElementById("result").innerText="🔵 METAL - Bu atığı METAL kutusuna atınız";
-changeBackground("linear-gradient(135deg,#bbdefb,#90caf9,#64b5f6)");
+setTheme(
+"linear-gradient(135deg,#bbdefb,#90caf9,#64b5f6)",
+"#1565c0"
+);
 sendArduino("M");
 }
 else if(cls==="pil"){
 document.getElementById("pilBin").classList.add("active-bin");
 document.getElementById("result").innerText="🟣 PİL - Bu atığı PİL kutusuna atınız";
-changeBackground("linear-gradient(135deg,#e1bee7,#ce93d8,#ba68c8)");
+setTheme(
+"linear-gradient(135deg,#e1bee7,#ce93d8,#ba68c8)",
+"#6a1b9a"
+);
 sendArduino("R");
 
 }
