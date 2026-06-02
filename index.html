@@ -179,6 +179,11 @@ let model,webcam;
 let port,writer;
 let sonSinif="";
 
+
+async function setTheme(bgColor){
+document.body.style.background = bgColor;
+}
+  
 async function connectArduino(){
 try{
 port=await navigator.serial.requestPort();
@@ -217,7 +222,7 @@ loop();
 
 async function loop(){
 webcam.update();
-await predict();
+predict();
 requestAnimationFrame(loop);
 }
 
@@ -244,46 +249,48 @@ clearBins();
 if(cls==="cam"){
 document.getElementById("camBin").classList.add("active-bin");
 document.getElementById("result").innerText="🟢 CAM - Bu atığı CAM kutusuna atınız";
-setTheme(
-"linear-gradient(135deg,#c8e6c9,#a5d6a7,#81c784)",
-"#2e7d32"
-);
+
+setTheme("linear-gradient(135deg,#c8e6c9,#a5d6a7,#81c784)");
+
 sendArduino("C");
 }
+  
 else if(cls==="kağıt" || cls==="kagit"){
 document.getElementById("kagitBin").classList.add("active-bin");
 document.getElementById("result").innerText="🟡 KAĞIT - Bu atığı KAĞIT kutusuna atınız";
-changeBackground("linear-gradient(135deg,#fff9c4,#fff59d,#ffe082)");
+
+setTheme("linear-gradient(135deg,#fff9c4,#fff59d,#ffe082)");
+
 sendArduino("K");
 }
+  
 else if(cls==="plastik"){
 document.getElementById("plastikBin").classList.add("active-bin");
 document.getElementById("result").innerText="🔴 PLASTİK - Bu atığı PLASTİK kutusuna atınız";
-setTheme(
-"linear-gradient(135deg,#fff9c4,#fff59d,#ffe082)",
-"#f9a825"
-);
+
+setTheme("linear-gradient(135deg,#ffcdd2,#ef9a9a,#e57373)");
+
 sendArduino("P");
 }
+  
 else if(cls==="metal"){
 document.getElementById("metalBin").classList.add("active-bin");
 document.getElementById("result").innerText="🔵 METAL - Bu atığı METAL kutusuna atınız";
-setTheme(
-"linear-gradient(135deg,#bbdefb,#90caf9,#64b5f6)",
-"#1565c0"
-);
+
+setTheme("linear-gradient(135deg,#bbdefb,#90caf9,#64b5f6)");
+
 sendArduino("M");
 }
+  
 else if(cls==="pil"){
 document.getElementById("pilBin").classList.add("active-bin");
 document.getElementById("result").innerText="🟣 PİL - Bu atığı PİL kutusuna atınız";
-setTheme(
-"linear-gradient(135deg,#e1bee7,#ce93d8,#ba68c8)",
-"#6a1b9a"
-);
-sendArduino("R");
 
+setTheme("linear-gradient(135deg,#e1bee7,#ce93d8,#ba68c8)");
+
+sendArduino("R");
 }
+  
 }
 
 async function sendArduino(harf){
