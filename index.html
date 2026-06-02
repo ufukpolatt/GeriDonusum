@@ -12,7 +12,6 @@
 
 <style>
 
-/* GENEL */
 body{
     margin:0;
     font-family:'Arial Rounded MT Bold', Arial;
@@ -20,7 +19,6 @@ body{
     text-align:center;
 }
 
-/* HEADER */
 .header{
     padding:20px;
     background:white;
@@ -40,7 +38,6 @@ body{
     color:#555;
 }
 
-/* ÜST BLOK */
 .top-row{
     display:flex;
     justify-content:center;
@@ -49,7 +46,6 @@ body{
     flex-wrap:wrap;
 }
 
-/* CARD */
 .card{
     background:white;
     width:380px;
@@ -58,7 +54,6 @@ body{
     box-shadow:0 8px 25px rgba(0,0,0,0.1);
 }
 
-/* RESULT */
 .result-card{
     margin:20px auto;
     width:820px;
@@ -72,9 +67,9 @@ body{
     color:#2e7d32;
     margin-top:10px;
     line-height:1.6;
+    white-space:pre-line;
 }
 
-/* BUTTON */
 button{
     background:#4caf50;
     color:white;
@@ -90,13 +85,11 @@ button:hover{
     transform:scale(1.05);
 }
 
-/* CAMERA */
 canvas{
     border-radius:15px;
     border:4px solid #4caf50;
 }
 
-/* MOBILE */
 @media (max-width:900px){
     .top-row{
         flex-direction:column;
@@ -115,7 +108,6 @@ canvas{
     <div class="subtitle">♻️ Çevre Kirliliğine Karşı Küçük Kahramanlar</div>
 </div>
 
-<!-- ÜST BLOK -->
 <div class="top-row">
 
     <div class="card">
@@ -134,7 +126,6 @@ canvas{
 
 </div>
 
-<!-- SONUÇ -->
 <div class="card result-card">
     <h2>♻️ Algılanan Atık Analizi</h2>
     <div id="result">Bekleniyor...</div>
@@ -151,8 +142,12 @@ let sonSinif = "";
 async function connectArduino(){
 
     try{
+
         port = await navigator.serial.requestPort();
-        await port.open({ baudRate:9600 });
+
+        await port.open({
+            baudRate:9600
+        });
 
         writer = port.writable.getWriter();
 
@@ -160,6 +155,7 @@ async function connectArduino(){
         .innerHTML = "✅ Arduino Bağlandı";
 
     }catch(err){
+
         alert("Arduino bağlantı hatası");
     }
 }
@@ -169,72 +165,174 @@ async function init(){
     const modelURL = URL + "model.json";
     const metadataURL = URL + "metadata.json";
 
-    model = await tmImage.load(modelURL, metadataURL);
+    model = await tmImage.load(
+        modelURL,
+        metadataURL
+    );
 
-    webcam = new tmImage.Webcam(350, 350, true);
-    await webcam.setup();
+    webcam = new tmImage.Webcam(
+        350,
+        350,
+        false
+    );
+
+    try{
+
+        await webcam.setup({
+            facingMode:"environment"
+        });
+
+    }catch(error){
+
+        console.log(
+            "Arka kamera açılamadı, varsayılan kamera açılıyor."
+        );
+
+        await webcam.setup();
+    }
+
     await webcam.play();
 
-    document.getElementById("webcam-container")
-    .appendChild(webcam.canvas);
+    const webcamContainer =
+    document.getElementById(
+        "webcam-container"
+    );
+
+    webcamContainer.innerHTML = "";
+
+    webcamContainer.appendChild(
+        webcam.canvas
+    );
 
     loop();
 }
 
 async function loop(){
+
     webcam.update();
+
     await predict();
+
     requestAnimationFrame(loop);
 }
 
 async function predict(){
 
-    const prediction = await model.predict(webcam.canvas);
+    const prediction =
+    await model.predict(
+        webcam.canvas
+    );
 
-    let highest = prediction[0];
+    let highest =
+    prediction[0];
 
-    for(let i=1;i<prediction.length;i++){
-        if(prediction[i].probability > highest.probability){
-            highest = prediction[i];
+    for(
+        let i=1;
+        i<prediction.length;
+        i++
+    ){
+
+        if(
+            prediction[i].probability >
+            highest.probability
+        ){
+
+            highest =
+            prediction[i];
         }
     }
 
-    let cls = highest.className.toLowerCase();
+    let cls =
+    highest.className.toLowerCase();
 
     let msg = "";
 
     if(cls === "cam"){
-        msg = "🟢 Bu bir CAM atığıdır.\n♻️ Geri dönüşüme uygundur ve cam kutusuna atabilirsiniz.";
-    }
-    else if(cls === "kağıt" || cls === "kagit"){
-        msg = "🟡 Bu bir KAĞIT atığıdır.\n♻️ Geri dönüşüme uygundur ve kağıt kutusuna atabilirsiniz.";
-    }
-    else if(cls === "plastik"){
-        msg = "🔵 Bu bir PLASTİK atığıdır.\n♻️ Geri dönüşüme uygundur ve plastik kutusuna atabilirsiniz.";
-    }
-    else if(cls === "metal"){
-        msg = "⚙️ Bu bir METAL atığıdır.\n♻️ Geri dönüşüme uygundur ve metal kutusuna atabilirsiniz.";
+
+        msg =
+`🟢 Bu bir CAM atığıdır.
+♻️ Geri dönüşüme uygundur ve cam kutusuna atabilirsiniz.`;
     }
 
-    document.getElementById("result").innerText = msg;
+    else if(
+        cls === "kağıt" ||
+        cls === "kagit"
+    ){
 
-    if(highest.probability > 0.90 && highest.className !== sonSinif){
+        msg =
+`🟡 Bu bir KAĞIT atığıdır.
+♻️ Geri dönüşüme uygundur ve kağıt kutusuna atabilirsiniz.`;
+    }
 
-        sonSinif = highest.className;
+    else if(
+        cls === "plastik"
+    ){
+
+        msg =
+`🔵 Bu bir PLASTİK atığıdır.
+♻️ Geri dönüşüme uygundur ve plastik kutusuna atabilirsiniz.`;
+    }
+
+    else if(
+        cls === "metal"
+    ){
+
+        msg =
+`⚙️ Bu bir METAL atığıdır.
+♻️ Geri dönüşüme uygundur ve metal kutusuna atabilirsiniz.`;
+    }
+
+    document.getElementById(
+        "result"
+    ).innerText = msg;
+
+    if(
+        highest.probability > 0.90 &&
+        highest.className !== sonSinif
+    ){
+
+        sonSinif =
+        highest.className;
 
         if(writer){
 
             if(cls === "cam"){
-                writer.write(new TextEncoder().encode("C"));
+
+                writer.write(
+                    new TextEncoder()
+                    .encode("C")
+                );
             }
-            else if(cls === "kağıt" || cls === "kagit"){
-                writer.write(new TextEncoder().encode("K"));
+
+            else if(
+                cls === "kağıt" ||
+                cls === "kagit"
+            ){
+
+                writer.write(
+                    new TextEncoder()
+                    .encode("K")
+                );
             }
-            else if(cls === "plastik"){
-                writer.write(new TextEncoder().encode("P"));
+
+            else if(
+                cls === "plastik"
+            ){
+
+                writer.write(
+                    new TextEncoder()
+                    .encode("P")
+                );
             }
-            else if(cls === "metal"){
-                writer.write(new TextEncoder().encode("M"));
+
+            else if(
+                cls === "metal"
+            ){
+
+                writer.write(
+                    new TextEncoder()
+                    .encode("M")
+                );
             }
         }
     }
