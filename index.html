@@ -1,343 +1,258 @@
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Minik Toz Makineleri ♻️</title>
+<title>Minik Toz Makineleri</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 
 <style>
-
 body{
-    margin:0;
-    font-family:'Arial Rounded MT Bold', Arial;
-    background: linear-gradient(135deg, #a8e6cf, #dcedc1, #b3e5fc);
-    text-align:center;
+margin:0;
+font-family:Arial,sans-serif;
+background:linear-gradient(135deg,#a8e6cf,#dcedc1,#b3e5fc);
+text-align:center;
 }
 
 .header{
-    padding:20px;
-    background:white;
-    border-bottom-left-radius:30px;
-    border-bottom-right-radius:30px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.1);
+background:white;
+padding:12px;
+box-shadow:0 3px 10px rgba(0,0,0,.1);
 }
 
-.title{
-    font-size:40px;
-    font-weight:bold;
-    color:#2e7d32;
-}
-
-.subtitle{
-    font-size:18px;
-    color:#555;
-}
+.title{font-size:32px;font-weight:bold;color:#2e7d32;}
+.subtitle{font-size:16px;color:#555;}
 
 .top-row{
-    display:flex;
-    justify-content:center;
-    gap:20px;
-    padding:20px;
-    flex-wrap:wrap;
+display:flex;
+justify-content:center;
+gap:15px;
+padding:10px;
+flex-wrap:wrap;
 }
 
 .card{
-    background:white;
-    width:380px;
-    padding:20px;
-    border-radius:20px;
-    box-shadow:0 8px 25px rgba(0,0,0,0.1);
+background:white;
+padding:15px;
+border-radius:20px;
+box-shadow:0 5px 15px rgba(0,0,0,.1);
 }
 
-.result-card{
-    margin:20px auto;
-    width:820px;
-    max-width:90%;
-    border:3px dashed #4caf50;
-}
-
-#result{
-    font-size:24px;
-    font-weight:bold;
-    color:#2e7d32;
-    margin-top:10px;
-    line-height:1.6;
-    white-space:pre-line;
-}
+.control{width:260px;}
+.camera{width:420px;}
 
 button{
-    background:#4caf50;
-    color:white;
-    border:none;
-    padding:12px 20px;
-    border-radius:12px;
-    font-size:16px;
-    cursor:pointer;
-    margin:8px;
-}
-
-button:hover{
-    transform:scale(1.05);
+background:#4caf50;
+color:white;
+border:none;
+padding:10px 15px;
+border-radius:10px;
+cursor:pointer;
+margin:5px;
 }
 
 canvas{
-    border-radius:15px;
-    border:4px solid #4caf50;
+border-radius:12px;
+border:3px solid #4caf50;
+max-width:100%;
 }
 
-@media (max-width:900px){
-    .top-row{
-        flex-direction:column;
-        align-items:center;
-    }
+#result{
+font-size:22px;
+font-weight:bold;
+margin:10px;
+color:#2e7d32;
 }
 
+.recycle-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:12px;
+padding:10px;
+max-width:1100px;
+margin:auto;
+}
+
+.bin{
+background:white;
+border-radius:20px;
+padding:10px;
+transition:.3s;
+box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+
+.bin img{
+width:70px;
+height:70px;
+object-fit:contain;
+}
+
+.active-bin{
+transform:scale(1.08);
+box-shadow:0 0 25px rgba(0,0,0,.4);
+}
+
+.green{border:4px solid #4caf50;}
+.yellow{border:4px solid #ffc107;}
+.red{border:4px solid #f44336;}
+.blue{border:4px solid #2196f3;}
+
+@media(max-width:900px){
+.recycle-grid{
+grid-template-columns:repeat(2,1fr);
+}
+}
 </style>
-
 </head>
 
 <body>
 
 <div class="header">
-    <div class="title">🌿 Minik Toz Makineleri</div>
-    <div class="subtitle">♻️ Çevre Kirliliğine Karşı Küçük Kahramanlar</div>
+<div class="title">🌿 Minik Toz Makineleri</div>
+<div class="subtitle">♻️ Yapay Zekâ Destekli Akıllı Geri Dönüşüm Sistemi</div>
 </div>
 
 <div class="top-row">
 
-    <div class="card">
-        <h2>🤖 Sistem Kontrol Paneli</h2>
+<div class="card control">
+<h3>Kontrol Paneli</h3>
+<button onclick="connectArduino()">🔌 Arduino Bağlan</button>
+<button onclick="init()">📷 Kamerayı Başlat</button>
+<div id="arduinoStatus">Arduino Bağlı Değil</div>
+</div>
 
-        <button onclick="connectArduino()">🔌 Arduino Bağlan</button>
-        <button onclick="init()">📷 Kamerayı Başlat</button>
-
-        <div id="arduinoStatus">Arduino Bağlı Değil ❌</div>
-    </div>
-
-    <div class="card">
-        <h2>👀 Kamera</h2>
-        <div id="webcam-container"></div>
-    </div>
+<div class="card camera">
+<h3>Kamera</h3>
+<div id="webcam-container"></div>
+</div>
 
 </div>
 
-<div class="card result-card">
-    <h2>♻️ Algılanan Atık Analizi</h2>
-    <div id="result">Bekleniyor...</div>
+<div id="result">Bekleniyor...</div>
+
+<div class="recycle-grid">
+
+<div class="bin green" id="camBin">
+<img src="https://cdn-icons-png.flaticon.com/512/679/679720.png">
+<h3>CAM</h3>
+</div>
+
+<div class="bin yellow" id="kagitBin">
+<img src="https://cdn-icons-png.flaticon.com/512/1046/1046857.png">
+<h3>KAĞIT</h3>
+</div>
+
+<div class="bin red" id="plastikBin">
+<img src="https://cdn-icons-png.flaticon.com/512/2933/2933820.png">
+<h3>PLASTİK</h3>
+</div>
+
+<div class="bin blue" id="metalBin">
+<img src="https://cdn-icons-png.flaticon.com/512/3659/3659899.png">
+<h3>METAL</h3>
+</div>
+
 </div>
 
 <script>
+const URL="https://teachablemachine.withgoogle.com/models/_uLZvC8jP/";
 
-const URL = "https://teachablemachine.withgoogle.com/models/_uLZvC8jP/";
-
-let model, webcam;
-let port, writer;
-let sonSinif = "";
+let model,webcam;
+let port,writer;
+let sonSinif="";
 
 async function connectArduino(){
+try{
+port=await navigator.serial.requestPort();
+await port.open({baudRate:9600});
+writer=port.writable.getWriter();
+document.getElementById("arduinoStatus").innerText="✅ Arduino Bağlandı";
+}catch(e){
+alert("Arduino bağlantı hatası");
+}
+}
 
-    try{
-
-        port = await navigator.serial.requestPort();
-
-        await port.open({
-            baudRate:9600
-        });
-
-        writer = port.writable.getWriter();
-
-        document.getElementById("arduinoStatus")
-        .innerHTML = "✅ Arduino Bağlandı";
-
-    }catch(err){
-
-        alert("Arduino bağlantı hatası");
-    }
+function clearBins(){
+document.querySelectorAll(".bin").forEach(x=>x.classList.remove("active-bin"));
 }
 
 async function init(){
 
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
+model=await tmImage.load(URL+"model.json",URL+"metadata.json");
 
-    model = await tmImage.load(
-        modelURL,
-        metadataURL
-    );
+webcam=new tmImage.Webcam(320,320,false);
 
-    webcam = new tmImage.Webcam(
-        350,
-        350,
-        false
-    );
+try{
+await webcam.setup({facingMode:"environment"});
+}catch(e){
+await webcam.setup();
+}
 
-    try{
+await webcam.play();
 
-        await webcam.setup({
-            facingMode:"environment"
-        });
+const area=document.getElementById("webcam-container");
+area.innerHTML="";
+area.appendChild(webcam.canvas);
 
-    }catch(error){
-
-        console.log(
-            "Arka kamera açılamadı, varsayılan kamera açılıyor."
-        );
-
-        await webcam.setup();
-    }
-
-    await webcam.play();
-
-    const webcamContainer =
-    document.getElementById(
-        "webcam-container"
-    );
-
-    webcamContainer.innerHTML = "";
-
-    webcamContainer.appendChild(
-        webcam.canvas
-    );
-
-    loop();
+loop();
 }
 
 async function loop(){
-
-    webcam.update();
-
-    await predict();
-
-    requestAnimationFrame(loop);
+webcam.update();
+await predict();
+requestAnimationFrame(loop);
 }
 
 async function predict(){
 
-    const prediction =
-    await model.predict(
-        webcam.canvas
-    );
+const prediction=await model.predict(webcam.canvas);
 
-    let highest =
-    prediction[0];
+let highest=prediction[0];
 
-    for(
-        let i=1;
-        i<prediction.length;
-        i++
-    ){
-
-        if(
-            prediction[i].probability >
-            highest.probability
-        ){
-
-            highest =
-            prediction[i];
-        }
-    }
-
-    let cls =
-    highest.className.toLowerCase();
-
-    let msg = "";
-
-    if(cls === "cam"){
-
-        msg =
-`🟢 Bu bir CAM atığıdır.
-♻️ Geri dönüşüme uygundur ve cam kutusuna atabilirsiniz.`;
-    }
-
-    else if(
-        cls === "kağıt" ||
-        cls === "kagit"
-    ){
-
-        msg =
-`🟡 Bu bir KAĞIT atığıdır.
-♻️ Geri dönüşüme uygundur ve kağıt kutusuna atabilirsiniz.`;
-    }
-
-    else if(
-        cls === "plastik"
-    ){
-
-        msg =
-`🔵 Bu bir PLASTİK atığıdır.
-♻️ Geri dönüşüme uygundur ve plastik kutusuna atabilirsiniz.`;
-    }
-
-    else if(
-        cls === "metal"
-    ){
-
-        msg =
-`⚙️ Bu bir METAL atığıdır.
-♻️ Geri dönüşüme uygundur ve metal kutusuna atabilirsiniz.`;
-    }
-
-    document.getElementById(
-        "result"
-    ).innerText = msg;
-
-    if(
-        highest.probability > 0.90 &&
-        highest.className !== sonSinif
-    ){
-
-        sonSinif =
-        highest.className;
-
-        if(writer){
-
-            if(cls === "cam"){
-
-                writer.write(
-                    new TextEncoder()
-                    .encode("C")
-                );
-            }
-
-            else if(
-                cls === "kağıt" ||
-                cls === "kagit"
-            ){
-
-                writer.write(
-                    new TextEncoder()
-                    .encode("K")
-                );
-            }
-
-            else if(
-                cls === "plastik"
-            ){
-
-                writer.write(
-                    new TextEncoder()
-                    .encode("P")
-                );
-            }
-
-            else if(
-                cls === "metal"
-            ){
-
-                writer.write(
-                    new TextEncoder()
-                    .encode("M")
-                );
-            }
-        }
-    }
+for(let i=1;i<prediction.length;i++){
+if(prediction[i].probability>highest.probability){
+highest=prediction[i];
+}
 }
 
+let cls=highest.className.toLowerCase();
+
+clearBins();
+
+if(cls==="cam"){
+document.getElementById("camBin").classList.add("active-bin");
+document.getElementById("result").innerText="🟢 CAM - Bu atığı CAM kutusuna atınız";
+sendArduino("C");
+}
+else if(cls==="kağıt" || cls==="kagit"){
+document.getElementById("kagitBin").classList.add("active-bin");
+document.getElementById("result").innerText="🟡 KAĞIT - Bu atığı KAĞIT kutusuna atınız";
+sendArduino("K");
+}
+else if(cls==="plastik"){
+document.getElementById("plastikBin").classList.add("active-bin");
+document.getElementById("result").innerText="🔴 PLASTİK - Bu atığı PLASTİK kutusuna atınız";
+sendArduino("P");
+}
+else if(cls==="metal"){
+document.getElementById("metalBin").classList.add("active-bin");
+document.getElementById("result").innerText="🔵 METAL - Bu atığı METAL kutusuna atınız";
+sendArduino("M");
+}
+}
+
+async function sendArduino(harf){
+
+if(!writer) return;
+
+if(sonSinif===harf) return;
+
+sonSinif=harf;
+
+await writer.write(new TextEncoder().encode(harf));
+}
 </script>
 
 </body>
