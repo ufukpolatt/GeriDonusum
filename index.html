@@ -153,6 +153,11 @@ grid-template-columns:repeat(2,1fr);
 <img src="https://cdn-icons-png.flaticon.com/512/3659/3659899.png">
 <h3>METAL</h3>
 </div>
+  
+<div class="bin blue" id="pilBin">
+<img src="https://cdn-icons-png.flaticon.com/512/3659/3659899.png">
+<h3>PİL</h3>
+</div>
 
 </div>
 
@@ -240,6 +245,12 @@ else if(cls==="metal"){
 document.getElementById("metalBin").classList.add("active-bin");
 document.getElementById("result").innerText="🔵 METAL - Bu atığı METAL kutusuna atınız";
 sendArduino("M");
+}
+}
+else if(cls==="pil"){
+document.getElementById("pilBin").classList.add("active-bin");
+document.getElementById("result").innerText="🔵 Pil - Bu atığı PİL kutusuna atınız";
+sendArduino("R");
 }
 }
 
