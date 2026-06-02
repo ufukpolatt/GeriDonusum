@@ -217,10 +217,17 @@ const area=document.getElementById("webcam-container");
 area.innerHTML="";
 area.appendChild(webcam.canvas);
 
+loop();
+}
+
 async function loop(){
 webcam.update();
-await predict();
+predict();
 requestAnimationFrame(loop);
+}
+
+async function changeBackground(color){
+document.body.style.background = color;
 }
 
 async function predict(){
